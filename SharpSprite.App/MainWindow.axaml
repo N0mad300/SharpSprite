@@ -14,33 +14,305 @@
 	</Design.DataContext>
 
 	<Grid RowDefinitions="Auto, *, Auto">
-		<!-- Top: Menu Bar Placeholder -->
-		<Border Grid.Row="0" Background="#303030" Height="30">
-			<TextBlock Text="File  Edit  View" VerticalAlignment="Center" Margin="10,0" Foreground="White"/>
-		</Border>
+		<Menu Grid.Row="0"  Background="#303030">
+			<Menu.Styles>
+				<Style Selector="MenuItem">
+					<Setter Property="Background" Value="Transparent"/>
+					<Setter Property="Foreground" Value="White"/>
+					<Setter Property="Padding" Value="10,5"/>
+				</Style>
+				<Style Selector="MenuItem:pointeover">
+					<Setter Property="Background" Value="#444444"/>
+				</Style>		
+			</Menu.Styles>
+			
+			<!-- FILE -->
+            <MenuItem Header="File">
+				<MenuItem Header="New..." Command="{Binding NewDocumentCommand}" InputGesture="Ctrl+N"/>
+				<MenuItem Header="Open..." Command="{Binding OpenDocumentCommand}" InputGesture="Ctrl+O"/>
+				<MenuItem Header="Open Recent">
+					<MenuItem></MenuItem>
+					<MenuItem></MenuItem>
+				</MenuItem>
+				<Separator/>
+				<MenuItem Header="Save" Command="{Binding SaveDocumentCommand}" InputGesture="Ctrl+S"/>
+				<MenuItem Header="Save As..." Command="{Binding SaveAsDocumentCommand}" InputGesture="Ctrl+Shift+S"/>
+				<MenuItem Header="Close" Command="{Binding CloseDocumentCommand}" InputGesture="Ctrl+W"/>
+				<MenuItem Header="Close All" Command="{Binding CloseAllDocumentCommand}" InputGesture="Ctrl+Shift+W"/>
+				<Separator/>
+				<MenuItem Header="Export">
+					<MenuItem Header="Export As..." Command="{Binding ExportDocumentCommand}" InputGesture="Ctrl+Alt+Shift+S"/>
+					<MenuItem Header="Export Sprite Sheet" Command="{Binding ExportSpriteSheetCommand}" InputGesture="Ctrl+E"/>
+					<Separator/>
+					<MenuItem Header="Export Tileset" Command="{Binding ExportTilesetCommand}"></MenuItem>
+					<Separator/>
+					<MenuItem Header="Repeat Last Export" Command="{Binding RepeatLastExportCommand}" InputGesture="Ctrl+Shift+X"/>
+				</MenuItem>
+				<MenuItem Header="Import">
+					<MenuItem Header="Import Sprite Sheet" Command="{Binding ImportSpriteSheetCommand}" InputGesture="Ctrl+I"/>
+				</MenuItem>
+				<Separator/>
+				<MenuItem Header="Exit" Command="{Binding ExitCommand}" InputGesture="Ctrl+Q"/>
+			</MenuItem>
+			
+			<!-- EDIT -->
+			<MenuItem Header="Edit">
+				<MenuItem Header="Undo" Command="{Binding UndoCommand}" InputGesture="Ctrl+Z"/>
+				<MenuItem Header="Redo" Command="{Binding RedoCommand}" InputGesture="Ctrl+Y"/>
+				<MenuItem Header="Undo History" Command="{Binding UndoHistoryCommand}"/>
+				<Separator/>
+				<MenuItem Header="Cut" Command="{Binding CutCommand}" InputGesture="Ctrl+X"/>
+				<MenuItem Header="Copy" Command="{Binding CopyCommand}" InputGesture="Ctrl+C"/>
+				<MenuItem Header="Copy Merged" Command="{Binding CopyMergedCommand}" InputGesture="Ctrl+Shift+C"/>
+				<MenuItem Header="Paste" Command="{Binding PasteCommand}" InputGesture="Ctrl+V"/>
+				<MenuItem Header="Paste Special">
+					<MenuItem Header="Paste as New Sprite" Command="{Binding PasteasNewSpriteCommand}"/>
+					<MenuItem Header="Paste as New Layer" Command="{Binding PasteasNewLayerCommand}" InputGesture="Ctrl+Shift+V"/>
+					<MenuItem Header="Paste as New Reference Layer" Command="{Binding PasteasNewReferenceLayerCommand}"/>
+				</MenuItem>
+				<MenuItem Header="Delete" Command="{Binding DeleteCommand}" InputGesture="Delete"/>
+				<Separator/>
+				<MenuItem  Header="Fill" Command="{Binding FillCommand}" InputGesture="F"/>
+				<MenuItem  Header="Stroke" Command="{Binding StrokeCommand}" InputGesture="S"/>
+				<Separator/>
+				<MenuItem  Header="Rotate">
+					<MenuItem Header="180" Command="{Binding Rotate180Command}"/>
+					<MenuItem Header="90 CW" Command="{Binding Rotate90CWCommand}"/>
+					<MenuItem Header="90 CCW" Command="{Binding Rotate90CCWCommand}"/>
+				</MenuItem>
+				<MenuItem Header="Flip Horizontal" Command="{Binding FlipHorizontalCommand}" InputGesture="Shift+H"/>
+				<MenuItem Header="Flip Vertical" Command="{Binding FlipVerticalCommand}" InputGesture="Shift+V" />
+				<MenuItem Header="Transform" Command="{Binding TransformCommand}" InputGesture="Ctrl+T" />
+				<MenuItem Header="Shift">
+					<MenuItem Header="Left" Command="{Binding ShiftLeftCommand}"/>
+					<MenuItem Header="Right" Command="{Binding ShiftRightCommand}"/>
+					<MenuItem Header="Up" Command="{Binding ShiftUpCommand}"/>
+					<MenuItem Header="Down" Command="{Binding ShiftDownCommand}"/>
+				</MenuItem>
+				<MenuItem Header="New Brush" Command="{Binding NewBrushCommand}" InputGesture="Ctrl+B"/>
+				<MenuItem Header="New Sprite From Selection" Command="{Binding NewSpriteFromSelectionCommand}" InputGesture="Ctrl+Alt+N"/>
+				<Separator/>
+				<MenuItem Header="Replace Color..." Command="{Binding ReplaceColorCommand}" InputGesture="Ctrl+R"/>
+				<MenuItem Header="Invert..." Command="{Binding InvertCommand}"/>
+				<MenuItem Header="Adjustments">
+					<MenuItem Header="Brighness/Contrast..." Command="{Binding AdjustmentsBrighnessContrastCommand}"/>
+					<MenuItem Header="Hue/Saturation..." Command="{Binding AdjustmentsHueSaturationCommand}" InputGesture="Ctrl+U"/>
+					<MenuItem Header="Color Curve..." Command="{Binding AdjustmentsColorCurveCommand}" InputGesture="Ctrl+M"/>
+				</MenuItem>
+				<MenuItem Header="FX">
+					<MenuItem Header="Outline" Command="{Binding FXOutlineCommand}" InputGesture="Shift+O"/>
+					<MenuItem Header="Convulution Matrix..." Command="{Binding FXConvulutionMatrixCommand}" InputGesture="F9"/>
+					<MenuItem Header="Despeckle (Median Filter)..." Command="{Binding FXDespeckleCommand}" />
+				</MenuItem>
+				<Separator/>
+				<MenuItem Header="Keyboard Shortcuts..." Command="{Binding KeyboardShortcutsCommand}" InputGesture="Ctrl+Alt+Shift+K"/>
+				<MenuItem Header="Preferences..." Command="{Binding PreferencesCommand}" InputGesture="Ctrl+K"/>
+			</MenuItem>
+			
+			<!-- SPRITE -->
+			<MenuItem Header="Sprite">
+				<MenuItem Header="Sprite Properties..." Command="{Binding SpritePropertiesCommand}" InputGesture="Ctrl+P"/>
+				<MenuItem Header="Color Mode">
+					<MenuItem Header="RGB Color" Command="{Binding ColorModeRgbColorCommand}"/>
+					<MenuItem Header="Grayscale" Command="{Binding ColorModeGrayscaleColorCommand}"/>
+					<MenuItem Header="Indexed " Command="{Binding ColorModeIndexedCommand}"/>
+					<Separator/>
+					<MenuItem Header="More Option" Command="{Binding ColorModeMoreOptionCommand}"/>
+				</MenuItem>
+				<Separator/>
+				<MenuItem Header="Duplicate..." Command="{Binding DuplicateCommand}"/>
+				<Separator/>
+				<MenuItem Header="Sprite Size..." Command="{Binding SpritesizeCommand}" InputGesture="Ctrl+Alt+I"/>
+				<MenuItem Header="Canvas Size..." Command="{Binding CanvasizeCommand}" InputGesture="C"/>
+				<MenuItem  Header="Rotate Canvas">
+					<MenuItem Header="180" Command="{Binding RotateCanva180Command}"/>
+					<MenuItem Header="90 CW" Command="{Binding RotateCanva90CWCommand}"/>
+					<MenuItem Header="90 CCW" Command="{Binding RotateCanva90CCWCommand}"/>
+					<Separator/>
+					<MenuItem Header="Flip Canvas Horizontal" Command="{Binding FlipCanvaHorizontalCommand}"/>
+					<MenuItem Header="Flip Canvas Vertical" Command="{Binding FlipCanvaVerticalCommand}"/>
+				</MenuItem>
+				<Separator/>
+				<MenuItem Header="Crop" Command="{Binding CropCommand}"/>
+				<MenuItem Header="Trim" Command="{Binding TrimCommand}"/>
+			</MenuItem>
+			
+			<!-- LAYER -->
+			<MenuItem Header="Layer">
+				<MenuItem Header="Layer Properties..." Command="{Binding LayerPropertiesCommand}" InputGesture="F2"/>
+				<MenuItem Header="Visible" Command="{Binding LayerVisibleCommand}" InputGesture="Shift+W"/>
+				<MenuItem Header="Lock Layer" Command="{Binding LockLayerCommand}"/>
+				<MenuItem Header="Open Group" Command="{Binding OpenGroupCommand}" InputGesture="Shift+E"/>
+				<Separator/>
+				<MenuItem Header="New">
+					<MenuItem Header="New Layer" Command="{Binding NewLayerCommand}" InputGesture="Shift+N"/>
+					<MenuItem Header="New Group" Command="{Binding NewGroupCommand}" InputGesture="Alt+Shift+N"/>
+					<Separator/>
+					<MenuItem Header="New Layer Via Copy" Command="{Binding NewLayerViaCopyCommand}" InputGesture="Ctrl+J"/>
+					<MenuItem Header="New Layer Via Cut" Command="{Binding NewLayerViaCutCommand}" InputGesture="Ctrl+Shift+J"/>
+					<Separator/>
+					<MenuItem Header="New Reference Layer From File" Command="{Binding NewReferenceLayerFromFileCommand}"/>
+					<MenuItem Header="New Tilemap Layer" Command="{Binding NewTilemapLayerCommand}" InputGesture="N"/>
+				</MenuItem>
+				<MenuItem Header="Delete Layer" Command="{Binding DeleteLayerCommand}"/>
+				<MenuItem Header="Convert To">
+					<MenuItem Header="Background Layer" Command="{Binding ConvertToBackgroundLayerCommand}"/>
+					<Separator/>
+					<MenuItem Header="Tilemap" Command="{Binding ConvertToTilemapCommand}"/>
+				</MenuItem>
+				<Separator/>
+				<MenuItem Header="Duplicate Layer" Command="{Binding DuplicateLayerCommand}"/>
+				<MenuItem Header="Merge Down" Command="{Binding MergeDownCommand}"/>
+				<MenuItem Header="Flatten" Command="{Binding FlattenCommand}"/>
+				<MenuItem Header="Flatten Visible" Command="{Binding FlattenVisibleCommand}"/>
+			</MenuItem>
 
-		<!-- Center: Workspace -->
-		<Grid Grid.Row="1" ColumnDefinitions="50, *, 200" Background="#202020">
-			<!-- Left: Tools Placeholder -->
-			<StackPanel Grid.Column="0" Background="#2d2d2d">
-				<TextBlock Text="Tools" Foreground="#aaaaaa" HorizontalAlignment="Center" Margin="0,10"/>
+			<!-- FRAME -->
+			<MenuItem Header="Frame">
+				<MenuItem Header="Frame Properties..." Command="{Binding FramePropertiesCommand}" InputGesture="P"/>
+				<MenuItem Header="Cel Properties..." Command="{Binding CelPropertiesCommand}"/>
+				<Separator/>
+				<MenuItem Header="New Frame" Command="{Binding NewFrameCommand}" InputGesture="Alt+N"/>
+				<MenuItem Header="New Empty Frame" Command="{Binding NewEmptyFrameCommand}" InputGesture="Alt+B"/>
+				<MenuItem Header="Duplicate Cel(s)" Command="{Binding DuplicateCelsCommand}" InputGesture="Alt+D"/>
+				<MenuItem Header="Duplicate Linked Cel(s)" Command="{Binding DuplicateLinkedCelsCommand}" InputGesture="Alt+M"/>
+				<MenuItem Header="Delete Frame" Command="{Binding DeleteFrameCommand}" InputGesture="Alt+C"/>
+				<Separator/>
+				<MenuItem Header="Playback">
+					<MenuItem Header="Play Animation" Command="{Binding PlayAnimationCommand}" InputGesture="Enter"/>
+					<MenuItem Header="Play Preview Animation" Command="{Binding PlayPreviewAnimationCommand}" InputGesture="Shift+Enter"/>
+					<Separator/>
+					<MenuItem Header="Playback Speed 0.25x" Command="{Binding PlaybackSpeed025Command}"/>
+					<MenuItem Header="Playback Speed 0.5x" Command="{Binding PlaybackSpeed05Command}"/>
+					<MenuItem Header="Playback Speed 1x" Command="{Binding PlaybackSpeed1Command}"/>
+					<MenuItem Header="Playback Speed 1.5x" Command="{Binding PlaybackSpeed15Command}"/>
+					<MenuItem Header="Playback Speed 2x" Command="{Binding PlaybackSpeed2Command}"/>
+					<MenuItem Header="Playback Speed 3x" Command="{Binding PlaybackSpeed3Command}"/>
+					<Separator/>
+					<MenuItem Header="Play Once" Command="{Binding PlayOnceCommand}"/>
+					<MenuItem Header="Play All Frames (Ignore Tags)" Command="{Binding PlayAllFramesCommand}"/>
+					<MenuItem Header="Play Subtags &amp; Repetitions" Command="{Binding PlaySubtagsCommand}"/>
+					<Separator/>
+					<MenuItem Header="Rewind on Stop" Command="{Binding RewindOnStopCommand}"/>
+				</MenuItem>
+				<MenuItem Header="Tags">
+					<MenuItem Header="Tag Properties..." Command="{Binding TagPropertiesCommand}"/>
+					<Separator/>
+					<MenuItem Header="New Tag" Command="{Binding NewTagCommand}"/>
+					<MenuItem Header="Delete Tag" Command="{Binding DeleteTagCommand}"/>
+				</MenuItem>
+				<MenuItem Header="Jump to">
+					<MenuItem Header="First Frame" Command="{Binding FirstFrameCommand}" InputGesture="Home"/>
+					<MenuItem Header="Previous Frame" Command="{Binding PreviousFrameCommand}" InputGesture="Left"/>
+					<MenuItem Header="Next Frame" Command="{Binding NextFrameCommand}" InputGesture="Right"/>
+					<MenuItem Header="Last Frame" Command="{Binding LastFrameCommand}" InputGesture="End"/>
+					<Separator/>
+					<MenuItem Header="First Frame in Tag" Command="{Binding FirstFrameInTagCommand}"/>
+					<MenuItem Header="Last Frame in Tag" Command="{Binding LastFrameInTagCommand}"/>
+					<Separator/>
+					<MenuItem Header="Go to Frame" Command="{Binding GoToFrameCommand}" InputGesture="Alt+G"/>
+				</MenuItem>
+				<Separator/>
+				<MenuItem Header="Constant Frame Rate" Command="{Binding ConstantFrameRateCommand}"/>
+				<MenuItem Header="Reverse Frames" Command="{Binding ReverseFramesCommand}" InputGesture="Alt+I"/>
+			</MenuItem>
+
+			<!-- SELECT -->
+			<MenuItem Header="Select">
+				<MenuItem Header="All" Command="{Binding SelectAllCommand}" InputGesture="Ctrl+A"/>
+				<MenuItem Header="Deselect" Command="{Binding DeselectCommand}" InputGesture="Escape"/>
+				<MenuItem Header="Reselect" Command="{Binding ReselectCommand}" InputGesture="Ctrl+Shift+D"/>
+				<MenuItem Header="Inverse" Command="{Binding InverseSelectionCommand}" InputGesture="Ctrl+Shift+I"/>
+				<Separator/>
+				<MenuItem Header="Color Range" Command="{Binding ColorRangeCommand}"/>
+				<MenuItem Header="Modify">
+					<MenuItem Header="Border" Command="{Binding ModifyBorderCommand}"/>
+					<MenuItem Header="Expand" Command="{Binding ModifyExpandCommand}"/>
+					<MenuItem Header="Contract" Command="{Binding ModifyContractCommand}"/>
+				</MenuItem>
+				<Separator/>
+				<MenuItem Header="Load from MSK file" Command="{Binding LoadFromMskCommand}"/>
+				<MenuItem Header="Save to MSK file" Command="{Binding SaveToMskCommand}"/>
+			</MenuItem>
+
+			<!-- VIEW -->
+			<MenuItem Header="View">
+				<MenuItem Header="Duplicate View" Command="{Binding DuplicateViewCommand}"/>
+				<MenuItem Header="Workspace Layout" Command="{Binding WorkspaceLayoutCommand}" InputGesture="Shift+W"/>
+				<MenuItem Header="Run Command" Command="{Binding RunCommandCommand}" InputGesture="Ctrl+Space"/>
+				<Separator/>
+				<MenuItem Header="Extras" Command="{Binding ExtrasCommand}" InputGesture="Ctrl+H"/>
+				<MenuItem Header="Show">
+					<MenuItem Header="Layer Edges" Command="{Binding ShowLayerEdgesCommand}"/>
+					<MenuItem Header="Selection Edges" Command="{Binding ShowSelectionEdgesCommand}"/>
+					<MenuItem Header="Grid" Command="{Binding ShowGridCommand}" InputGesture="Ctrl+OemQuotes"/>
+					<MenuItem Header="Auto Guides" Command="{Binding ShowAutoGuidesCommand}"/>
+					<MenuItem Header="Slices" Command="{Binding ShowSlicesCommand}"/>
+					<MenuItem Header="Pixel Grid" Command="{Binding ShowPixelGridCommand}" InputGesture="Ctrl+Shift+OemQuotes"/>
+					<MenuItem Header="Tile Numbers" Command="{Binding ShowTileNumbersCommand}"/>
+					<Separator/>
+					<MenuItem Header="Brush Preview" Command="{Binding ShowBrushPreviewCommand}"/>
+				</MenuItem>
+				<MenuItem Header="Grid">
+					<MenuItem Header="Grid Settings" Command="{Binding GridSettingsCommand}"/>
+					<MenuItem Header="Selection as Grid" Command="{Binding SelectionAsGridCommand}"/>
+					<MenuItem Header="Snap to Grid" Command="{Binding SnapToGridCommand}" InputGesture="Shift+S"/>
+				</MenuItem>
+				<MenuItem Header="Tiled Mode">
+					<MenuItem Header="None" Command="{Binding TiledModeNoneCommand}"/>
+					<MenuItem Header="Tiled in Both Axes" Command="{Binding TiledBothAxesCommand}"/>
+					<MenuItem Header="Tiled in X Axis" Command="{Binding TiledXAxisCommand}"/>
+					<MenuItem Header="Tiled in Y Axis" Command="{Binding TiledYAxisCommand}"/>
+				</MenuItem>
+				<MenuItem Header="Symmetry Options" Command="{Binding SymmetryOptionsCommand}"/>
+				<Separator/>
+				<MenuItem Header="Set Loop Section" Command="{Binding SetLoopSectionCommand}" InputGesture="F2"/>
+				<MenuItem Header="Show Onion Skin" Command="{Binding ShowOnionSkinCommand}" InputGesture="F3"/>
+				<Separator/>
+				<MenuItem Header="Timeline" Command="{Binding TimelineCommand}" InputGesture="Tab"/>
+				<MenuItem Header="Preview">
+					<MenuItem Header="Preview" Command="{Binding PreviewCommand}" InputGesture="F7"/>
+					<MenuItem Header="Hide Other Layers" Command="{Binding PreviewHideOtherLayersCommand}" InputGesture="Shift+F7"/>
+					<MenuItem Header="Brush Preview" Command="{Binding PreviewBrushPreviewCommand}"/>
+				</MenuItem>
+				<MenuItem Header="Advanced Mode" Command="{Binding AdvancedModeCommand}" InputGesture="Ctrl+F"/>
+				<MenuItem Header="Full Screen Mode" Command="{Binding FullScreenModeCommand}" InputGesture="F11"/>
+				<MenuItem Header="Full Screen Preview" Command="{Binding FullScreenPreviewCommand}" InputGesture="F6"/>
+				<MenuItem Header="Home" Command="{Binding HomeCommand}"/>
+				<Separator/>
+				<MenuItem Header="Refresh &amp; Reload Theme" Command="{Binding RefreshReloadThemeCommand}" InputGesture="F5"/>
+			</MenuItem>
+			
+			<!-- HELP -->
+			<MenuItem Header="Help">
+				<MenuItem Header="Readme" Command="{Binding ReadmeCommand}"/>
+				<Separator/>
+				<MenuItem Header="Quick Reference" Command="{Binding QuickReferenceCommand}"/>
+				<MenuItem Header="Documentation" Command="{Binding DocumentationCommand}"/>
+				<MenuItem Header="Tutorial" Command="{Binding TutorialCommand}"/>
+				<Separator/>
+				<MenuItem Header="Release Notes" Command="{Binding ReleaseNotesCommand}"/>
+				<MenuItem Header="Twitter" Command="{Binding TwitterCommand}"/>
+				<Separator/>
+				<MenuItem Header="About" Command="{Binding AboutCommand}"/>
+			</MenuItem>
+			
+		</Menu>
+		<Grid Grid.Row="1" ColumnDefinitions="50, *, 200" Background="#2d2d2d">
+			
+			<StackPanel Grid.Column="0"  Orientation="Vertical" HorizontalAlignment="Center" VerticalAlignment="Top" >
+				<TextBlock Text="Tools" Foreground="#aaaaaa" Margin="0,10"/>
+				
 			</StackPanel>
-
-			<!-- Middle: The Canvas -->
 			<Border Grid.Column="1" Background="#181818" ClipToBounds="True">
-				<!-- Our Custom Control -->
-				<controls:PixelCanvasControl Document="{Binding ActiveDocument}" />
+				<controls:PixelCanvasControl Document="{Binding ActiveDocument}"/>
 			</Border>
-
-			<!-- Right: Panels Placeholder -->
-			<StackPanel Grid.Column="2" Background="#2d2d2d">
+			<StackPanel Grid.Column="2" Background="#2d2d2d" Orientation="Vertical" HorizontalAlignment="Center" VerticalAlignment="Top" >
 				<TextBlock Text="Layers" Foreground="#aaaaaa" Margin="10"/>
 			</StackPanel>
 		</Grid>
-
-		<!-- Bottom: Status Bar -->
 		<Border Grid.Row="2" Background="#007ACC" Height="25">
-			<TextBlock Text="Ready" Foreground="White" VerticalAlignment="Center" Margin="10,0" FontSize="12"/>
+			<TextBlock Text="{Binding StatusText}" Foreground="White" VerticalAlignment="Center" Margin="10,0" FontSize="12"/>
 		</Border>
 	</Grid>
 </Window>
