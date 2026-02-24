@@ -307,7 +307,10 @@
 				
 			</StackPanel>
 			<Border Grid.Column="1" Background="#181818" ClipToBounds="True">
-				<controls:PixelCanvasControl Document="{Binding ActiveDocument}"/>
+				<controls:PixelCanvasControl
+                    Document="{Binding ActiveDocument}"
+                    ActiveFrame="{Binding ActiveFrame}"
+                    Zoom="0"/>
 			</Border>
 			<StackPanel Grid.Column="2" Background="#2d2d2d" Orientation="Vertical" HorizontalAlignment="Center" VerticalAlignment="Top" >
 				<TextBlock Text="Layers" Foreground="#aaaaaa" Margin="10"/>
