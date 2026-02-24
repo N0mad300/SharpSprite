@@ -39,7 +39,15 @@
             if (x < 0 || x >= Width || y < 0 || y >= Height) return Rgba32.Transparent;
             return Pixels[y * Width + x];
         }
+        public void Clear()
+        {
+            for (int i = 0; i < Pixels.Length; i++)
+            {
+                Pixels[i] = Rgba32.Transparent;
+            }
+        }
     }
+
 
     // Simple placeholder for the Document
     public class SpriteDocument

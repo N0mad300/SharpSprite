@@ -14,33 +14,118 @@
 	</Design.DataContext>
 
 	<Grid RowDefinitions="Auto, *, Auto">
-		<!-- Top: Menu Bar Placeholder -->
-		<Border Grid.Row="0" Background="#303030" Height="30">
-			<TextBlock Text="File  Edit  View" VerticalAlignment="Center" Margin="10,0" Foreground="White"/>
-		</Border>
+		<Menu Grid.Row="0"  Background="#303030">
+			<Menu.Styles>
+				<Style Selector="MenuItem">
+					<Setter Property="Background" Value="Transparent"/>
+					<Setter Property="Foreground" Value="White"/>
+					<Setter Property="Padding" Value="10,5"/>
+				</Style>
+				<Style Selector="MenuItem:pointeover">
+					<Setter Property="Background" Value="#444444"/>
+				</Style>		
+			</Menu.Styles>
+			
+			<!-- FILE -->
+            <MenuItem Header="File">
+				<MenuItem Header="New..." Command="{Binding NewDocumentCommand}" InputGesture="Ctrl+N"/>
+				<MenuItem Header="Open..." Command="{Binding OpenDocumentCommand}" InputGesture="Ctrl+O"/>
+				<Separator/>
+				<MenuItem Header="Save" Command="{Binding SaveDocumentCommand}" InputGesture="Ctrl+S"/>
+				<MenuItem Header="Save As..." Command="{Binding SaveAsDocumentCommand}" InputGesture="Ctrl+Shift+S"/>
+				<Separator/>
+				<MenuItem Header="Export PNG..." Command="{Binding ExportPngCommand}" InputGesture="Ctrl+E"/>
+				<Separator/>
+				<MenuItem Header="Exit" Command="{Binding ExitCommand}" InputGesture="Alt+F4"/>
+			</MenuItem>
+			
+			<!-- EDIT -->
+			<MenuItem Header="Edit">
+				<MenuItem Header="Undo" Command="{Binding UndoCommand}" InputGesture="Ctrl+Z"/>
+				<MenuItem Header="Redo" Command="{Binding RedoCommand}" InputGesture="Ctrl+Y"/>
+				<Separator/>
+				<MenuItem Header="Clear Canvas" Command="{Binding ClearCanvasCommand}"/>
+			</MenuItem>
+			
+			<!-- SPRITE -->
+			<MenuItem Header="Sprite"> 
+				<MenuItem Header="Flip Horizontal" Command="{Binding FlipHorizontalCommand}" InputGesture="Ctrl+H"/>
+				<MenuItem Header="Flip Vertical" Command="{Binding FlipVerticalCommand}" InputGesture="Ctrl+V"/>
+				<MenuItem Header="Rotate 90°" Command="{Binding RotateCommand}" InputGesture="Ctrl+R"/>
+				<MenuItem Header="Resize" Command="{Binding ResizeCommand}" InputGesture="Ctrl+Shift+R"/>
+			</MenuItem>
+			
+			<!-- LAYER -->
+			<MenuItem Header="_Layer">
+				<MenuItem Header="New Layer" Command="{Binding NewLayerCommand}"/>
+				<MenuItem Header="Delete Layer" Command="{Binding DeleteLayerCommand}"/>
+				<MenuItem Header="Move Down" Command="{Binding MoveLayerDownCommand}"/>
+				<MenuItem Header="Move Up" Command="{Binding MoveLayerUpCommand}"/>
+				<MenuItem Header="Duplicate Layer" Command="{Binding DuplicateLayerCommand}"/>
+			</MenuItem>
 
-		<!-- Center: Workspace -->
-		<Grid Grid.Row="1" ColumnDefinitions="50, *, 200" Background="#202020">
-			<!-- Left: Tools Placeholder -->
-			<StackPanel Grid.Column="0" Background="#2d2d2d">
-				<TextBlock Text="Tools" Foreground="#aaaaaa" HorizontalAlignment="Center" Margin="0,10"/>
+			<!-- FRAME -->
+			<MenuItem Header="_Frame">
+				<MenuItem Header="New Frame" Command="{Binding NewFrameCommand}"/>
+				<MenuItem Header="Delete Frame" Command="{Binding DeleteFrameCommand}"/>
+				<MenuItem Header="Duplicate Frame" Command="{Binding DuplicateFrameCommand}"/>
+			</MenuItem>
+
+			<!-- SELECT -->
+			<MenuItem Header="_Select">
+				<MenuItem Header="Select All" Command="{Binding SelectAllCommand}" InputGesture="Ctrl+A"/>
+				<MenuItem Header="Deselect" Command="{Binding DeselectCommand}" InputGesture="Ctrl+D"/>
+				<MenuItem Header="Invert Selection" Command="{Binding InvertSelectionCommand}"/>
+			</MenuItem>
+
+			<!-- VIEW -->
+			<MenuItem Header="View">
+				<MenuItem Header="Zoom In" Command="{Binding ZoomInCommand}" InputGesture="Ctrl+Add"/>
+				<MenuItem Header="Zoom Out" Command="{Binding ZoomOutCommand}" InputGesture="Ctrl+Subtract"/>
+				<MenuItem Header="Fit to Screen" Command="{Binding ZoomFitCommand}" InputGesture="Ctrl+0"/>
+				<Separator/>
+				<MenuItem Header="Show Grid" Command="{Binding ToggleGridCommand}"/>
+			</MenuItem>
+			
+			<!-- HELP -->
+			<MenuItem Header="_Help">
+				<MenuItem Header="About" Command="{Binding AboutCommand}"/>
+			</MenuItem>
+			
+		</Menu>
+		<Grid Grid.Row="1" ColumnDefinitions="50, *, 200" Background="#2d2d2d">
+			
+			<StackPanel Grid.Column="0"  Orientation="Vertical" HorizontalAlignment="Center" VerticalAlignment="Top" >
+				<TextBlock Text="Tools" Foreground="#aaaaaa" Margin="0,10"/>
+				<!-- Pencil -->
+				<Button Command="{Binding SelectPencilCommand}" ToolTip.Tip="Pencil (P)" Width="40" Height="40" Margin="0,2">
+					<TextBlock Text="✏" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+				</Button>
+
+				<!-- Eraser -->
+				<Button Command="{Binding SelectEraserCommand}" ToolTip.Tip="Eraser (E)" Width="40" Height="40" Margin="0,2">
+					<TextBlock Text="🧽" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+				</Button>
+
+				<!-- Fill -->
+				<Button Command="{Binding SelectFillCommand}" ToolTip.Tip="Fill (F)" Width="40" Height="40" Margin="0,2">
+					<TextBlock Text="🪣" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+				</Button>
+
+				<!-- Line -->
+				<Button Command="{Binding SelectLineCommand}" ToolTip.Tip="Line (L)" Width="40" Height="40" Margin="0,2">
+					<TextBlock Text="📏" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+				</Button>
 			</StackPanel>
-
-			<!-- Middle: The Canvas -->
 			<Border Grid.Column="1" Background="#181818" ClipToBounds="True">
-				<!-- Our Custom Control -->
-				<controls:PixelCanvasControl Document="{Binding ActiveDocument}" />
+				<controls:PixelCanvasControl Document="{Binding ActiveDocument}"/>
 			</Border>
-
-			<!-- Right: Panels Placeholder -->
-			<StackPanel Grid.Column="2" Background="#2d2d2d">
+			<StackPanel Grid.Column="2" Background="#2d2d2d" Orientation="Vertical" HorizontalAlignment="Center" VerticalAlignment="Top" >
 				<TextBlock Text="Layers" Foreground="#aaaaaa" Margin="10"/>
 			</StackPanel>
 		</Grid>
-
-		<!-- Bottom: Status Bar -->
 		<Border Grid.Row="2" Background="#007ACC" Height="25">
-			<TextBlock Text="Ready" Foreground="White" VerticalAlignment="Center" Margin="10,0" FontSize="12"/>
+			<TextBlock Text="{Binding StatusText}" Foreground="White" VerticalAlignment="Center" Margin="10,0" FontSize="12"/>
 		</Border>
 	</Grid>
 </Window>
