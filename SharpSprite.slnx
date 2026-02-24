@@ -1,4 +1,7 @@
 <Solution>
+  <Folder Name="/Solution Items/">
+    <File Path="README.md" />
+  </Folder>
   <Project Path="SharpSprite.App/SharpSprite.App.csproj" Id="bf9a0b12-22c6-45c7-932e-06d7d680401a" />
   <Project Path="SharpSprite.Core/SharpSprite.Core.csproj" Id="45808851-096f-464c-9927-13d0aaa750e8" />
   <Project Path="SharpSprite.Rendering/SharpSprite.Rendering.csproj" Id="12c4799b-db86-4c30-b64b-4440ba7c6b15" />
