@@ -9,7 +9,8 @@
         x:DataType="vm:MainWindowViewModel"
         Title="SharpSprite"
 		FontFamily="{StaticResource AsepriteFont}"
-		FontSize="30">
+		FontSize="30"
+		Icon="{StaticResource AppLogo}">
 
 	<Design.DataContext>
 		<vm:MainWindowViewModel/>
