@@ -2,15 +2,17 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:SharpSprite.App.ViewModels"
         xmlns:controls="using:SharpSprite.App.Controls"
+        xmlns:tools="using:SharpSprite.App.Tools"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        mc:Ignorable="d" d:DesignWidth="1100" d:DesignHeight="680"
         x:Class="SharpSprite.App.MainWindow"
         x:DataType="vm:MainWindowViewModel"
-        Title="SharpSprite"
+        Title="{Binding TitleText}"
+		Icon="{StaticResource AppLogo}"
 		FontFamily="{StaticResource AsepriteFont}"
 		FontSize="30"
-		Icon="{StaticResource AppLogo}">
+		MinWidth="700" MinHeight="450">
 
 	<Design.DataContext>
 		<vm:MainWindowViewModel/>
@@ -311,6 +313,10 @@
 				<controls:PixelCanvasControl
                     Document="{Binding ActiveDocument}"
                     ActiveFrame="{Binding ActiveFrame}"
+					UndoStack="{Binding UndoStack}"
+					ActiveToolType="{Binding ActiveToolType}"
+					ForegroundColor="{Binding ForegroundColor}"
+					BackgroundColor="{Binding BackgroundColor}"
                     Zoom="0"/>
 			</Border>
 			<StackPanel Grid.Column="2" Background="#2d2d2d" Orientation="Vertical" HorizontalAlignment="Center" VerticalAlignment="Top" >
