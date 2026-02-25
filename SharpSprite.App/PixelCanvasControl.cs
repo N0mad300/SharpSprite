@@ -96,6 +96,9 @@ namespace SharpSprite.App.Controls
         private float _cachedOffsetX = 0f;
         private float _cachedOffsetY = 0f;
 
+        private bool _middlePanning;
+        private Point _middlePanLastPt;
+
         // ══════════════════════════════════════════════════════════════════
         // Construction / lifecycle
         // ══════════════════════════════════════════════════════════════════
@@ -195,6 +198,16 @@ namespace SharpSprite.App.Controls
         {
             base.OnPointerPressed(e);
             Focus();
+
+            // Middle-mouse button → start pan, don't forward to tool
+            if (e.GetCurrentPoint(this).Properties.IsMiddleButtonPressed)
+            {
+                _middlePanning = true;
+                _middlePanLastPt = e.GetPosition(this);
+                e.Handled = true;
+                return;
+            }
+
             var ctx = BuildToolContext();
             if (ctx == null) return;
             _toolRegistry.Get(ActiveToolType).OnPointerPressed(ctx, e);
@@ -203,6 +216,26 @@ namespace SharpSprite.App.Controls
         protected override void OnPointerMoved(PointerEventArgs e)
         {
             base.OnPointerMoved(e);
+
+            // Middle-mouse pan in progress
+            if (_middlePanning)
+            {
+                // Cancel if button was released outside the control
+                if (!e.GetCurrentPoint(this).Properties.IsMiddleButtonPressed)
+                {
+                    _middlePanning = false;
+                    return;
+                }
+
+                var current = e.GetPosition(this);
+                double dx = current.X - _middlePanLastPt.X;
+                double dy = current.Y - _middlePanLastPt.Y;
+                _middlePanLastPt = current;
+                PanOffset += new Vector(dx, dy);
+                e.Handled = true;
+                return;
+            }
+
             var ctx = BuildToolContext();
             if (ctx == null) return;
             _toolRegistry.Get(ActiveToolType).OnPointerMoved(ctx, e);
@@ -211,6 +244,14 @@ namespace SharpSprite.App.Controls
         protected override void OnPointerReleased(PointerReleasedEventArgs e)
         {
             base.OnPointerReleased(e);
+
+            if (_middlePanning)
+            {
+                _middlePanning = false;
+                e.Handled = true;
+                return;
+            }
+
             var ctx = BuildToolContext();
             if (ctx == null) return;
             _toolRegistry.Get(ActiveToolType).OnPointerReleased(ctx, e);
@@ -220,25 +261,24 @@ namespace SharpSprite.App.Controls
         {
             base.OnPointerWheelChanged(e);
 
-            // Ctrl + scroll wheel → zoom regardless of active tool
-            if (e.KeyModifiers.HasFlag(KeyModifiers.Control))
+            // Shift + scroll → pan horizontally; Control + scroll → pan vertically
+            if (e.KeyModifiers.HasFlag(KeyModifiers.Shift))
             {
-                int current = (int)(Zoom <= 0 ? ComputeAutoZoom() : Zoom);
-                if (e.Delta.Y > 0)
-                    Zoom = Math.Min(ZoomTool.MaxZoom, current + 1);
-                else
-                    Zoom = Math.Max(ZoomTool.MinZoom, current - 1);
+                PanOffset += new Vector(e.Delta.Y * 16, 0);
+                e.Handled = true;
+                return;
+            }
+            else if (e.KeyModifiers.HasFlag(KeyModifiers.Control)) {
+                PanOffset += new Vector(0, e.Delta.Y * 16);
                 e.Handled = true;
                 return;
             }
 
-            // Plain scroll → pan vertically; Shift+scroll → pan horizontally
-            double panStep = 16;
-            if (e.KeyModifiers.HasFlag(KeyModifiers.Shift))
-                PanOffset += new Vector(e.Delta.Y * panStep, 0);
+            int current = (int)(Zoom <= 0 ? ComputeAutoZoom() : Zoom);
+            if (e.Delta.Y > 0)
+                Zoom = Math.Min(ZoomTool.MaxZoom, current + 1);
             else
-                PanOffset += new Vector(0, e.Delta.Y * panStep);
-
+                Zoom = Math.Max(ZoomTool.MinZoom, current - 1);
             e.Handled = true;
         }
 
