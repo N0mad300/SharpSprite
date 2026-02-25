@@ -1,7 +1,10 @@
-﻿using Avalonia;
+﻿using System;
+using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using SharpSprite.App.Tools;
+using SharpSprite.Core.Commands;
 using SharpSprite.Core.Document;
 
 namespace SharpSprite.App.ViewModels
@@ -9,7 +12,50 @@ namespace SharpSprite.App.ViewModels
     public partial class MainWindowViewModel : ObservableObject
     {
         [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(TitleText))]
         private Document? _activeDocument;
+
+        /// <summary>
+        /// Single undo stack per document.  Replaced when the document changes.
+        /// </summary>
+        [ObservableProperty]
+        private UndoStack _undoStack = new UndoStack(capacity: 100);
+
+        // ══════════════════════════════════════════════════════════════════
+        // Tool selection
+        // ══════════════════════════════════════════════════════════════════
+
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(IsPencilActive))]
+        [NotifyPropertyChangedFor(nameof(IsEraserActive))]
+        [NotifyPropertyChangedFor(nameof(IsPanActive))]
+        [NotifyPropertyChangedFor(nameof(IsZoomActive))]
+        private ToolType _activeToolType = ToolType.Pencil;
+
+        public bool IsPencilActive => ActiveToolType == ToolType.Pencil;
+        public bool IsEraserActive => ActiveToolType == ToolType.Eraser;
+        public bool IsPanActive => ActiveToolType == ToolType.Pan;
+        public bool IsZoomActive => ActiveToolType == ToolType.Zoom;
+
+        // ══════════════════════════════════════════════════════════════════
+        // Colors
+        // ══════════════════════════════════════════════════════════════════
+
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(ForegroundColorHex))]
+        private Rgba32 _foregroundColor = new Rgba32(0, 0, 0, 255);   // black
+
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(BackgroundColorHex))]
+        private Rgba32 _backgroundColor = new Rgba32(255, 255, 255, 255); // white
+
+        public string ForegroundColorHex => $"#{ForegroundColor.R:X2}{ForegroundColor.G:X2}{ForegroundColor.B:X2}";
+        public string BackgroundColorHex => $"#{BackgroundColor.R:X2}{BackgroundColor.G:X2}{BackgroundColor.B:X2}";
+
+
+        // ══════════════════════════════════════════════════════════════════
+        // Frame navigation
+        // ══════════════════════════════════════════════════════════════════
 
         [ObservableProperty]
         [NotifyPropertyChangedFor(nameof(FrameLabel))]
@@ -20,20 +66,44 @@ namespace SharpSprite.App.ViewModels
                 ? "0 / 0"
                 : $"{ActiveFrame + 1} / {ActiveDocument.Sprite.FrameCount}";
 
+        // ══════════════════════════════════════════════════════════════════
+        // Status / title
+        // ══════════════════════════════════════════════════════════════════
+
         [ObservableProperty]
         private string _statusText = "Ready";
 
+        public string TitleText
+        {
+            get
+            {
+                var name = ActiveDocument?.DisplayName ?? "Untitled";
+                var dirty = (ActiveDocument?.IsModified ?? false) ? "●  " : "";
+                return $"{dirty}{name} – SharpSprite";
+            }
+        }
+
+        public string UndoLabel => UndoStack.CanUndo ? $"Undo {UndoStack.NextUndoName}" : "Undo";
+        public string RedoLabel => UndoStack.CanRedo ? $"Redo {UndoStack.NextRedoName}" : "Redo";
+
+        // ══════════════════════════════════════════════════════════════════
+        // Construction
+        // ══════════════════════════════════════════════════════════════════
+
         public MainWindowViewModel()
         {
-            ActiveDocument = CreateDefaultDocument();
+            SetDocument(CreateDefaultDocument());
         }
+
+        // ══════════════════════════════════════════════════════════════════
+        // Commands - MenuBar
+        // ══════════════════════════════════════════════════════════════════
 
         // FILE 
         [RelayCommand]
         private void NewDocument()
         {
-            ActiveDocument = CreateDefaultDocument();
-            ActiveFrame = 0;
+            SetDocument(CreateDefaultDocument());
             StatusText = "New document created (32x32)";
         }
         [RelayCommand] private void SaveDocument() => StatusText = "Save Document — not yet implemented";
@@ -56,8 +126,26 @@ namespace SharpSprite.App.ViewModels
         }
 
         // EDIT 
-        [RelayCommand] private void Undo() => StatusText = "Undo — not yet implemented";
-        [RelayCommand] private void Redo() => StatusText = "Redo — not yet implemented";
+        [RelayCommand(CanExecute = nameof(CanUndo))]
+        private void Undo()
+        {
+            UndoStack.Undo();
+            OnPropertyChanged(nameof(UndoLabel));
+            OnPropertyChanged(nameof(RedoLabel));
+            StatusText = UndoStack.CanUndo ? $"Undid: {UndoStack.NextRedoName}" : "Nothing to undo.";
+        }
+        private bool CanUndo() => UndoStack.CanUndo;
+
+        [RelayCommand(CanExecute = nameof(CanRedo))]
+        private void Redo()
+        {
+            UndoStack.Redo();
+            OnPropertyChanged(nameof(UndoLabel));
+            OnPropertyChanged(nameof(RedoLabel));
+            StatusText = UndoStack.CanRedo ? $"Redid: {UndoStack.NextUndoName}" : "Nothing to redo.";
+        }
+        private bool CanRedo() => UndoStack.CanRedo;
+
         [RelayCommand] private void UndoHistory() => StatusText = "Undo History — not yet implemented";
         [RelayCommand] private void Cut() => StatusText = "Cut — not yet implemented";
         [RelayCommand] private void Copy() => StatusText = "Copy — not yet implemented";
@@ -153,8 +241,20 @@ namespace SharpSprite.App.ViewModels
         [RelayCommand] private void NewTag() => StatusText = "New Tag — not yet implemented";
         [RelayCommand] private void DeleteTag() => StatusText = "Delete Tag — not yet implemented";
         [RelayCommand] private void FirstFrame() => StatusText = "First Frame — not yet implemented";
-        [RelayCommand] private void PreviousFrame() => StatusText = "Previous Frame — not yet implemented";
-        [RelayCommand] private void NextFrame() => StatusText = "Next Frame — not yet implemented";
+
+        [RelayCommand]
+        private void PreviousFrame()
+        {
+            if (ActiveFrame > 0) ActiveFrame--;
+        }
+
+        [RelayCommand]
+        private void NextFrame()
+        {
+            if (ActiveDocument == null) return;
+            if (ActiveFrame < ActiveDocument.Sprite.FrameCount - 1) ActiveFrame++;
+        }
+
         [RelayCommand] private void LastFrame() => StatusText = "Last Frame — not yet implemented";
         [RelayCommand] private void FirstFrameInTag() => StatusText = "First Frame in Tag — not yet implemented";
         [RelayCommand] private void LastFrameInTag() => StatusText = "Last Frame in Tag — not yet implemented";
@@ -216,34 +316,57 @@ namespace SharpSprite.App.ViewModels
         [RelayCommand] private void Twitter() => StatusText = "Twitter — not yet implemented";
         [RelayCommand] private void About() => StatusText = "About SharpSprite";
 
+        // ══════════════════════════════════════════════════════════════════
+        // Commands - ToolBar
+        // ══════════════════════════════════════════════════════════════════
+
+        [RelayCommand] private void PickPencil() => ActiveToolType = ToolType.Pencil;
+        [RelayCommand] private void PickEraser() => ActiveToolType = ToolType.Eraser;
+        [RelayCommand] private void PickPan() => ActiveToolType = ToolType.Pan;
+        [RelayCommand] private void PickZoom() => ActiveToolType = ToolType.Zoom;
+
+        // ══════════════════════════════════════════════════════════════════
+        // Helpers
+        // ══════════════════════════════════════════════════════════════════
+
+        private void SetDocument(Document doc)
+        {
+            // Unsubscribe old
+            if (ActiveDocument != null)
+                ActiveDocument.ModifiedChanged -= OnDocumentModifiedChanged;
+
+            var newStack = new UndoStack(100);
+            newStack.Changed += OnUndoStackChanged;
+
+            // Replace undo stack first so the canvas sees the new one
+            UndoStack = newStack;
+            ActiveFrame = 0;
+            ActiveDocument = doc;
+
+            doc.ModifiedChanged += OnDocumentModifiedChanged;
+            OnPropertyChanged(nameof(TitleText));
+        }
+
+        private void OnDocumentModifiedChanged(object? sender, EventArgs e)
+            => OnPropertyChanged(nameof(TitleText));
+
+        private void OnUndoStackChanged(object? sender, EventArgs e)
+        {
+            OnPropertyChanged(nameof(UndoLabel));
+            OnPropertyChanged(nameof(RedoLabel));
+            UndoCommand.NotifyCanExecuteChanged();
+            RedoCommand.NotifyCanExecuteChanged();
+        }
+
         private static Document CreateDefaultDocument()
         {
-            // 32 × 32 RGBA sprite, one layer, one frame
             var doc = SpriteFactory.CreateBlankRgba(32, 32);
-
-            // Paint a simple test pattern so the canvas is immediately visible
             var sprite = doc.Sprite;
             var layer = (LayerImage)sprite.Layers[0];
             var cel = layer.GetCel(0)!;
             var image = cel.Data.Image;
 
-            for (int y = 0; y < image.Height; y++)
-                for (int x = 0; x < image.Width; x++)
-                {
-                    // Quadrant colours
-                    bool left = x < image.Width / 2;
-                    bool top = y < image.Height / 2;
-                    Rgba32 color = (left, top) switch
-                    {
-                        (true, true) => new Rgba32(0xFF, 0x00, 0x5F),   // hot pink
-                        (false, true) => new Rgba32(0x00, 0xC8, 0xFF),   // cyan
-                        (true, false) => new Rgba32(0xFF, 0xC8, 0x00),   // yellow
-                        (false, false) => new Rgba32(0x00, 0xE0, 0x50),   // green
-                    };
-                    image.SetPixelRgba(x, y, color);
-                }
-
-            doc.IsModified = false; // fresh document
+            doc.IsModified = false;
             return doc;
         }
     }
