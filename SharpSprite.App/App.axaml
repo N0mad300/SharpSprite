@@ -7,7 +7,11 @@
 		<FontFamily x:Key="AsepriteFont">
 			avares://SharpSprite.App/Assets/Fonts#Aseprite
 		</FontFamily>
+		<WindowIcon x:Key="AppLogo">
+			avares://SharpSprite.App/Assets/Logo/LOGO_SharpSprite.ico
+		</WindowIcon>
 	</Application.Resources>
+	
 
     <Application.Styles>
         <FluentTheme />
