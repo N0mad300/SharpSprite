@@ -24,6 +24,6 @@
   <ItemGroup>
     <ProjectReference Include="..\SharpSprite.Core\SharpSprite.Core.csproj" />
     <ProjectReference Include="..\SharpSprite.Rendering\SharpSprite.Rendering.csproj" />
-	<AvaloniaResource Include="Assets\**"/>
+	<AvaloniaResource Include="Assets\**" />
   </ItemGroup>
 </Project>
