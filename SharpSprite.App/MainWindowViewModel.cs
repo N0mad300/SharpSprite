@@ -1,11 +1,16 @@
 ﻿using System;
+using System.IO;
+using System.Threading.Tasks;
 using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using SharpSprite.App.Tools;
 using SharpSprite.Core.Commands;
 using SharpSprite.Core.Document;
+using SharpSprite.Infrastructure;
 
 namespace SharpSprite.App.ViewModels
 {
@@ -96,6 +101,20 @@ namespace SharpSprite.App.ViewModels
         }
 
         // ══════════════════════════════════════════════════════════════════
+        // File filter for Avalonia storage provider dialogs
+        // ══════════════════════════════════════════════════════════════════
+
+        private static readonly FilePickerFileType AsepriteFilter = new("Aseprite Files")
+        {
+            Patterns = new[] { "*.aseprite", "*.ase" },
+            MimeTypes = new[] { "application/octet-stream" },
+        };
+
+        private Window? MainWindow =>
+            (Application.Current?.ApplicationLifetime
+                as IClassicDesktopStyleApplicationLifetime)?.MainWindow;
+
+        // ══════════════════════════════════════════════════════════════════
         // Commands - MenuBar
         // ══════════════════════════════════════════════════════════════════
 
@@ -106,9 +125,103 @@ namespace SharpSprite.App.ViewModels
             SetDocument(CreateDefaultDocument());
             StatusText = "New document created (32x32)";
         }
-        [RelayCommand] private void SaveDocument() => StatusText = "Save Document — not yet implemented";
-        [RelayCommand] private void OpenDocument() => StatusText = "Open Document — not yet implemented";
-        [RelayCommand] private void SaveAsDocument() => StatusText = "Save As Document — not yet implemented";
+
+        [RelayCommand]
+        private async Task OpenDocument()
+        {
+            var window = MainWindow;
+            if (window == null) return;
+
+            var files = await window.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+            {
+                Title = "Open Aseprite File",
+                AllowMultiple = false,
+                FileTypeFilter = new[] { AsepriteFilter },
+            });
+
+            if (files.Count == 0) return;
+
+            string path = files[0].TryGetLocalPath() ?? string.Empty;
+            if (string.IsNullOrEmpty(path)) return;
+
+            try
+            {
+                var doc = DocumentIO.Load(path);
+                SetDocument(doc);
+                StatusText = $"Opened: {Path.GetFileName(path)}";
+            }
+            catch (Exception ex)
+            {
+                StatusText = $"Error opening file: {ex.Message}";
+            }
+        }
+
+        [RelayCommand]
+        private void SaveDocument()
+        {
+            var doc = ActiveDocument;
+            if (doc == null) return;
+
+            if (!string.IsNullOrEmpty(doc.FilePath) && DocumentIO.IsSupported(doc.FilePath))
+            {
+                try
+                {
+                    DocumentIO.Save(doc, doc.FilePath);
+                    StatusText = $"Saved: {Path.GetFileName(doc.FilePath)}";
+                    OnPropertyChanged(nameof(TitleText));
+                }
+                catch (Exception ex)
+                {
+                    StatusText = $"Error saving: {ex.Message}";
+                }
+            }
+            else
+            {
+                // No valid path yet – fall through to Save As
+                _ = SaveAsDocumentAsync();
+            }
+        }
+
+        [RelayCommand]
+        private async Task SaveAsDocument() => await SaveAsDocumentAsync();
+
+        private async Task SaveAsDocumentAsync()
+        {
+            var doc = ActiveDocument;
+            if (doc == null) return;
+
+            var window = MainWindow;
+            if (window == null) return;
+
+            string suggestedName = doc.DisplayName.EndsWith(".aseprite", StringComparison.OrdinalIgnoreCase)
+                ? doc.DisplayName
+                : doc.DisplayName + ".aseprite";
+
+            var file = await window.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+            {
+                Title = "Save Aseprite File",
+                SuggestedFileName = suggestedName,
+                DefaultExtension = ".aseprite",
+                FileTypeChoices = new[] { AsepriteFilter },
+            });
+
+            if (file == null) return;
+
+            string path = file.TryGetLocalPath() ?? string.Empty;
+            if (string.IsNullOrEmpty(path)) return;
+
+            try
+            {
+                DocumentIO.Save(doc, path);
+                StatusText = $"Saved: {Path.GetFileName(path)}";
+                OnPropertyChanged(nameof(TitleText));
+            }
+            catch (Exception ex)
+            {
+                StatusText = $"Error saving: {ex.Message}";
+            }
+        }
+
         [RelayCommand] private void ExportDocument() => StatusText = "Export Document — not yet implemented";
         [RelayCommand] private void ShareDocument() => StatusText = "Share Document — not yet implemented";
         [RelayCommand] private void CloseDocument() => StatusText = "Close Document — not yet implemented";
@@ -117,6 +230,7 @@ namespace SharpSprite.App.ViewModels
         [RelayCommand] private void ExportSpriteSheet() => StatusText = "Export Sprite Sheet — not yet implemented";
         [RelayCommand] private void RepeatLastExport() => StatusText = "Repeat Last Export — not yet implemented";
         [RelayCommand] private void ExportTileset() => StatusText = "Export Tileset — not yet implemented";
+
         [RelayCommand]
         private void Exit()
         {
@@ -361,10 +475,6 @@ namespace SharpSprite.App.ViewModels
         private static Document CreateDefaultDocument()
         {
             var doc = SpriteFactory.CreateBlankRgba(32, 32);
-            var sprite = doc.Sprite;
-            var layer = (LayerImage)sprite.Layers[0];
-            var cel = layer.GetCel(0)!;
-            var image = cel.Data.Image;
 
             doc.IsModified = false;
             return doc;
