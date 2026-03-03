@@ -303,13 +303,8 @@
 			</MenuItem>
 			
 		</Menu>
-		<Grid Grid.Row="1" ColumnDefinitions="50, *, 200" Background="#2d2d2d">
-			
-			<StackPanel Grid.Column="0"  Orientation="Vertical" HorizontalAlignment="Center" VerticalAlignment="Top" >
-				<TextBlock Text="Tools" Foreground="#aaaaaa" Margin="0,10"/>
-				
-			</StackPanel>
-			<Border Grid.Column="1" Background="#181818" ClipToBounds="True">
+		<Grid Grid.Row="1" ColumnDefinitions="*" Background="#2d2d2d">
+			<Border Grid.Column="0" Background="#181818" ClipToBounds="True">
 				<controls:PixelCanvasControl
                     Document="{Binding ActiveDocument}"
                     ActiveFrame="{Binding ActiveFrame}"
@@ -319,9 +314,6 @@
 					BackgroundColor="{Binding BackgroundColor}"
                     Zoom="0"/>
 			</Border>
-			<StackPanel Grid.Column="2" Background="#2d2d2d" Orientation="Vertical" HorizontalAlignment="Center" VerticalAlignment="Top" >
-				<TextBlock Text="Layers" Foreground="#aaaaaa" Margin="10"/>
-			</StackPanel>
 		</Grid>
 		<Border Grid.Row="2" Background="#007ACC" Height="30" Padding="0,0,0,6">
 			<TextBlock Text="{Binding StatusText}" Foreground="White" VerticalAlignment="Center" HorizontalAlignment="Left" Margin="10,0" FontSize="26"/>
