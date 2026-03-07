@@ -304,6 +304,13 @@
 			
 		</Menu>
 		<Grid Grid.Row="1" ColumnDefinitions="320, *">
+
+			<Border Grid.Column="0"
+					BorderThickness="0,0,1,0"
+					BorderBrush="#1a1a1a">
+				<controls:PaletteControl DataContext="{Binding Palette}"/>
+			</Border>
+			
 			<Grid Grid.Column="1" RowDefinitions="Auto, *">
 				<!-- Context bar -->
 				<controls:ContextBarControl Grid.Row="0"

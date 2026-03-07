@@ -21,6 +21,7 @@ namespace SharpSprite.App.ViewModels
         // ══════════════════════════════════════════════════════════════════
 
         public ToolbarViewModel Toolbar { get; } = new();
+        public PaletteViewModel Palette { get; } = new();
         public StatusBarViewModel StatusBar { get; } = new();
         public ContextBarViewModel ContextBar { get; } = new();
 
@@ -53,16 +54,17 @@ namespace SharpSprite.App.ViewModels
         // Colors
         // ══════════════════════════════════════════════════════════════════
 
-        [ObservableProperty]
-        [NotifyPropertyChangedFor(nameof(ForegroundColorHex))]
-        private Rgba32 _foregroundColor = new Rgba32(0, 0, 0, 255);   // black
+        public Rgba32 ForegroundColor
+        {
+            get => Palette.ForegroundColor;
+            set { Palette.ForegroundColor = value; OnPropertyChanged(); }
+        }
 
-        [ObservableProperty]
-        [NotifyPropertyChangedFor(nameof(BackgroundColorHex))]
-        private Rgba32 _backgroundColor = new Rgba32(255, 255, 255, 255); // white
-
-        public string ForegroundColorHex => $"#{ForegroundColor.R:X2}{ForegroundColor.G:X2}{ForegroundColor.B:X2}";
-        public string BackgroundColorHex => $"#{BackgroundColor.R:X2}{BackgroundColor.G:X2}{BackgroundColor.B:X2}";
+        public Rgba32 BackgroundColor
+        {
+            get => Palette.BackgroundColor;
+            set { Palette.BackgroundColor = value; OnPropertyChanged(); }
+        }
 
 
         // ══════════════════════════════════════════════════════════════════
@@ -142,7 +144,19 @@ namespace SharpSprite.App.ViewModels
                 }
             };
 
+            // Forward palette color changes → canvas
+            Palette.PropertyChanged += (_, e) =>
+            {
+                if (e.PropertyName is nameof(PaletteViewModel.ForegroundColor)
+                                   or nameof(PaletteViewModel.BackgroundColor))
+                {
+                    OnPropertyChanged(nameof(ForegroundColor));
+                    OnPropertyChanged(nameof(BackgroundColor));
+                }
+            };
+
             SetDocument(CreateDefaultDocument());
+            Palette.LoadDefaultPalette();
         }
 
         // ══════════════════════════════════════════════════════════════════
@@ -178,6 +192,7 @@ namespace SharpSprite.App.ViewModels
         private void NewDocument()
         {
             SetDocument(CreateDefaultDocument());
+            Palette.LoadDefaultPalette();
             StatusText = "New document created (32x32)";
         }
 
@@ -503,6 +518,8 @@ namespace SharpSprite.App.ViewModels
             ActiveFrame = 0;
             ActiveDocument = doc;
 
+            Palette.LoadFromPalette(doc.Sprite.GetPalette(0));
+
             StatusBar.SpriteWidth = doc.Sprite.Width;
             StatusBar.SpriteHeight = doc.Sprite.Height;
             StatusBar.ColorMode = doc.Sprite.ColorMode.ToString();
@@ -528,7 +545,6 @@ namespace SharpSprite.App.ViewModels
         private static Document CreateDefaultDocument()
         {
             var doc = SpriteFactory.CreateBlankRgba(32, 32);
-
             doc.IsModified = false;
             return doc;
         }
