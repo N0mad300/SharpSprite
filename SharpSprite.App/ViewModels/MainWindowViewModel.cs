@@ -16,13 +16,24 @@ namespace SharpSprite.App.ViewModels
 {
     public partial class MainWindowViewModel : ObservableObject
     {
+        // ══════════════════════════════════════════════════════════════════
+        // Panel view models
+        // ══════════════════════════════════════════════════════════════════
+
+        public ToolbarViewModel Toolbar { get; } = new();
+        public PaletteViewModel Palette { get; } = new();
+        public TimelineViewModel TimelineVM { get; } = new();
+        public StatusBarViewModel StatusBar { get; } = new();
+        public ContextBarViewModel ContextBar { get; } = new();
+
+        // ══════════════════════════════════════════════════════════════════
+        // Active document
+        // ══════════════════════════════════════════════════════════════════
+
         [ObservableProperty]
         [NotifyPropertyChangedFor(nameof(TitleText))]
         private Document? _activeDocument;
 
-        /// <summary>
-        /// Single undo stack per document.  Replaced when the document changes.
-        /// </summary>
         [ObservableProperty]
         private UndoStack _undoStack = new UndoStack(capacity: 100);
 
@@ -30,53 +41,83 @@ namespace SharpSprite.App.ViewModels
         // Tool selection
         // ══════════════════════════════════════════════════════════════════
 
-        [ObservableProperty]
-        [NotifyPropertyChangedFor(nameof(IsPencilActive))]
-        [NotifyPropertyChangedFor(nameof(IsEraserActive))]
-        [NotifyPropertyChangedFor(nameof(IsPanActive))]
-        [NotifyPropertyChangedFor(nameof(IsZoomActive))]
-        private ToolType _activeToolType = ToolType.Pencil;
-
-        public bool IsPencilActive => ActiveToolType == ToolType.Pencil;
-        public bool IsEraserActive => ActiveToolType == ToolType.Eraser;
-        public bool IsPanActive => ActiveToolType == ToolType.Pan;
-        public bool IsZoomActive => ActiveToolType == ToolType.Zoom;
+        public ToolType ActiveToolType
+        {
+            get => Toolbar.ActiveToolType;
+            set
+            {
+                Toolbar.ActiveToolType = value;
+                ContextBar.ActiveTool = value;
+                OnPropertyChanged();
+            }
+        }
 
         // ══════════════════════════════════════════════════════════════════
         // Colors
         // ══════════════════════════════════════════════════════════════════
 
-        [ObservableProperty]
-        [NotifyPropertyChangedFor(nameof(ForegroundColorHex))]
-        private Rgba32 _foregroundColor = new Rgba32(0, 0, 0, 255);   // black
+        public Rgba32 ForegroundColor
+        {
+            get => Palette.ForegroundColor;
+            set { Palette.ForegroundColor = value; OnPropertyChanged(); }
+        }
 
-        [ObservableProperty]
-        [NotifyPropertyChangedFor(nameof(BackgroundColorHex))]
-        private Rgba32 _backgroundColor = new Rgba32(255, 255, 255, 255); // white
-
-        public string ForegroundColorHex => $"#{ForegroundColor.R:X2}{ForegroundColor.G:X2}{ForegroundColor.B:X2}";
-        public string BackgroundColorHex => $"#{BackgroundColor.R:X2}{BackgroundColor.G:X2}{BackgroundColor.B:X2}";
+        public Rgba32 BackgroundColor
+        {
+            get => Palette.BackgroundColor;
+            set { Palette.BackgroundColor = value; OnPropertyChanged(); }
+        }
 
 
         // ══════════════════════════════════════════════════════════════════
         // Frame navigation
         // ══════════════════════════════════════════════════════════════════
 
-        [ObservableProperty]
-        [NotifyPropertyChangedFor(nameof(FrameLabel))]
-        private int _activeFrame;
+        public int ActiveFrame
+        {
+            get => TimelineVM.CurrentFrame;
+            set
+            {
+                TimelineVM.CurrentFrame = value;
+                StatusBar.CurrentFrame = value + 1;
+                OnPropertyChanged();
+            }
+        }
 
-        public string FrameLabel =>
-            ActiveDocument == null
-                ? "0 / 0"
-                : $"{ActiveFrame + 1} / {ActiveDocument.Sprite.FrameCount}";
+
+        // ══════════════════════════════════════════════════════════════════
+        // Zoom (forwarded to StatusBar)
+        // ══════════════════════════════════════════════════════════════════
+
+        private int _zoomLevel = 0; // 0 = auto-fit
+
+        public int ZoomLevel
+        {
+            get => _zoomLevel;
+            set
+            {
+                _zoomLevel = value;
+                StatusBar.Zoom = value <= 0 ? 1 : value;
+                ContextBar.CurrentZoom = value <= 0 ? 1 : value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(CanvasZoom));
+            }
+        }
+
+        /// <summary>Passed directly to PixelCanvasControl.Zoom.</summary>
+        public int CanvasZoom => _zoomLevel;
 
         // ══════════════════════════════════════════════════════════════════
         // Status / title
         // ══════════════════════════════════════════════════════════════════
 
-        [ObservableProperty]
         private string _statusText = "Ready";
+
+        public string StatusText
+        {
+            get => _statusText;
+            set { _statusText = value; StatusBar.StatusMessage = value; OnPropertyChanged(); }
+        }
 
         public string TitleText
         {
@@ -97,7 +138,39 @@ namespace SharpSprite.App.ViewModels
 
         public MainWindowViewModel()
         {
+            // Forward toolbar tool changes → ContextBar + canvas
+            Toolbar.PropertyChanged += (_, e) =>
+            {
+                if (e.PropertyName == nameof(ToolbarViewModel.ActiveToolType))
+                {
+                    //ContextBar.ActiveTool = Toolbar.ActiveToolType;
+                    OnPropertyChanged(nameof(ActiveToolType));
+                }
+            };
+
+            // Forward palette color changes → canvas
+            Palette.PropertyChanged += (_, e) =>
+            {
+                if (e.PropertyName is nameof(PaletteViewModel.ForegroundColor)
+                                   or nameof(PaletteViewModel.BackgroundColor))
+                {
+                    OnPropertyChanged(nameof(ForegroundColor));
+                    OnPropertyChanged(nameof(BackgroundColor));
+                }
+            };
+
             SetDocument(CreateDefaultDocument());
+            Palette.LoadDefaultPalette();
+        }
+
+        // ══════════════════════════════════════════════════════════════════
+        // Cursor position (called by canvas control)
+        // ══════════════════════════════════════════════════════════════════
+
+        public void UpdateCursorPosition(int x, int y)
+        {
+            StatusBar.CursorX = x;
+            StatusBar.CursorY = y;
         }
 
         // ══════════════════════════════════════════════════════════════════
@@ -123,6 +196,7 @@ namespace SharpSprite.App.ViewModels
         private void NewDocument()
         {
             SetDocument(CreateDefaultDocument());
+            Palette.LoadDefaultPalette();
             StatusText = "New document created (32x32)";
         }
 
@@ -239,7 +313,10 @@ namespace SharpSprite.App.ViewModels
                 lifetime.Shutdown();
         }
 
-        // EDIT 
+        // ══════════════════════════════════════════════════════════════════
+        // Commands – EDIT
+        // ══════════════════════════════════════════════════════════════════
+
         [RelayCommand(CanExecute = nameof(CanUndo))]
         private void Undo()
         {
@@ -339,7 +416,7 @@ namespace SharpSprite.App.ViewModels
         [RelayCommand] private void DuplicateCels() => StatusText = "Duplicate Cel(s) — not yet implemented";
         [RelayCommand] private void DuplicateLinkedCels() => StatusText = "Duplicate Linked Cel(s) — not yet implemented";
         [RelayCommand] private void DeleteFrame() => StatusText = "Delete Frame — not yet implemented";
-        [RelayCommand] private void PlayAnimation() => StatusText = "Play Animation — not yet implemented";
+        [RelayCommand] private void PlayAnimation() => TimelineVM.TogglePlayCommand.Execute(null);
         [RelayCommand] private void PlayPreviewAnimation() => StatusText = "Play Preview Animation — not yet implemented";
         [RelayCommand] private void PlaybackSpeed025() => StatusText = "Playback Speed: 0.25x";
         [RelayCommand] private void PlaybackSpeed05() => StatusText = "Playback Speed: 0.5x";
@@ -354,22 +431,10 @@ namespace SharpSprite.App.ViewModels
         [RelayCommand] private void TagProperties() => StatusText = "Tag Properties — not yet implemented";
         [RelayCommand] private void NewTag() => StatusText = "New Tag — not yet implemented";
         [RelayCommand] private void DeleteTag() => StatusText = "Delete Tag — not yet implemented";
-        [RelayCommand] private void FirstFrame() => StatusText = "First Frame — not yet implemented";
-
-        [RelayCommand]
-        private void PreviousFrame()
-        {
-            if (ActiveFrame > 0) ActiveFrame--;
-        }
-
-        [RelayCommand]
-        private void NextFrame()
-        {
-            if (ActiveDocument == null) return;
-            if (ActiveFrame < ActiveDocument.Sprite.FrameCount - 1) ActiveFrame++;
-        }
-
-        [RelayCommand] private void LastFrame() => StatusText = "Last Frame — not yet implemented";
+        [RelayCommand] private void FirstFrame() => TimelineVM.GoToFirstFrameCommand.Execute(null);
+        [RelayCommand] private void PreviousFrame() => TimelineVM.PreviousFrameCommand.Execute(null);
+        [RelayCommand] private void NextFrame() => TimelineVM.NextFrameCommand.Execute(null);
+        [RelayCommand] private void LastFrame() => TimelineVM.GoToLastFrameCommand.Execute(null);
         [RelayCommand] private void FirstFrameInTag() => StatusText = "First Frame in Tag — not yet implemented";
         [RelayCommand] private void LastFrameInTag() => StatusText = "Last Frame in Tag — not yet implemented";
         [RelayCommand] private void GoToFrame() => StatusText = "Go to Frame — not yet implemented";
@@ -431,15 +496,6 @@ namespace SharpSprite.App.ViewModels
         [RelayCommand] private void About() => StatusText = "About SharpSprite";
 
         // ══════════════════════════════════════════════════════════════════
-        // Commands - ToolBar
-        // ══════════════════════════════════════════════════════════════════
-
-        [RelayCommand] private void PickPencil() => ActiveToolType = ToolType.Pencil;
-        [RelayCommand] private void PickEraser() => ActiveToolType = ToolType.Eraser;
-        [RelayCommand] private void PickPan() => ActiveToolType = ToolType.Pan;
-        [RelayCommand] private void PickZoom() => ActiveToolType = ToolType.Zoom;
-
-        // ══════════════════════════════════════════════════════════════════
         // Helpers
         // ══════════════════════════════════════════════════════════════════
 
@@ -454,11 +510,21 @@ namespace SharpSprite.App.ViewModels
 
             // Replace undo stack first so the canvas sees the new one
             UndoStack = newStack;
-            ActiveFrame = 0;
             ActiveDocument = doc;
-
             doc.ModifiedChanged += OnDocumentModifiedChanged;
+
+            TimelineVM.SyncFromDocument(doc);
+            Palette.LoadFromPalette(doc.Sprite.GetPalette(0));
+
+            StatusBar.SpriteWidth = doc.Sprite.Width;
+            StatusBar.SpriteHeight = doc.Sprite.Height;
+            StatusBar.ColorMode = doc.Sprite.ColorMode.ToString();
+            StatusBar.TotalFrames = doc.Sprite.FrameCount;
+            StatusBar.CurrentFrame = 1;
+
             OnPropertyChanged(nameof(TitleText));
+            OnPropertyChanged(nameof(ActiveFrame));
+            OnPropertyChanged(nameof(CanvasZoom));
         }
 
         private void OnDocumentModifiedChanged(object? sender, EventArgs e)
@@ -475,7 +541,6 @@ namespace SharpSprite.App.ViewModels
         private static Document CreateDefaultDocument()
         {
             var doc = SpriteFactory.CreateBlankRgba(32, 32);
-
             doc.IsModified = false;
             return doc;
         }

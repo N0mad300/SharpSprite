@@ -39,10 +39,6 @@ namespace SharpSprite.App.Controls
         public static readonly StyledProperty<int> ActiveFrameProperty =
             AvaloniaProperty.Register<PixelCanvasControl, int>(nameof(ActiveFrame), defaultValue: 0);
 
-        /// <summary>
-        /// Integer pixel multiplier.  0 = auto-fit (largest whole-number scale
-        /// that fits the viewport).
-        /// </summary>
         public static readonly StyledProperty<int> ZoomProperty =
             AvaloniaProperty.Register<PixelCanvasControl, int>(nameof(Zoom), defaultValue: 0);
 
@@ -80,6 +76,8 @@ namespace SharpSprite.App.Controls
         public Rgba32 ForegroundColor { get => GetValue(ForegroundColorProperty); set => SetValue(ForegroundColorProperty, value); }
         public Rgba32 BackgroundColor { get => GetValue(BackgroundColorProperty); set => SetValue(BackgroundColorProperty, value); }
 
+        public Action<int, int>? CursorMoved;
+        public Action<int>? ZoomChanged;
 
         // ══════════════════════════════════════════════════════════════════
         // Private state
@@ -145,6 +143,7 @@ namespace SharpSprite.App.Controls
             else if (change.Property == ZoomProperty ||
                      change.Property == PanOffsetProperty)
             {
+                ZoomChanged?.Invoke(Zoom <= 0 ? (int)ComputeAutoZoom() : Zoom);
                 InvalidateVisual();
             }
             else if (change.Property == ActiveToolTypeProperty)
@@ -216,6 +215,13 @@ namespace SharpSprite.App.Controls
         protected override void OnPointerMoved(PointerEventArgs e)
         {
             base.OnPointerMoved(e);
+
+            // Report cursor position
+            var pos = e.GetPosition(this);
+            // Always report — even outside sprite bounds
+            float spriteX = (float)(pos.X - _cachedOffsetX) / _cachedScale;
+            float spriteY = (float)(pos.Y - _cachedOffsetY) / _cachedScale;
+            CursorMoved?.Invoke((int)Math.Floor(spriteX), (int)Math.Floor(spriteY));
 
             // Middle-mouse pan in progress
             if (_middlePanning)
